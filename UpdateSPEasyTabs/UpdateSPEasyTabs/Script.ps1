@@ -1,3 +1,0 @@
-﻿# Testing
-# Script.ps1
-#
