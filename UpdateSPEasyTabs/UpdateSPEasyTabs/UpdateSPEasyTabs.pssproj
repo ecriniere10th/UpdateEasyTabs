@@ -27,6 +27,10 @@
   </PropertyGroup>
   <ItemGroup />
   <ItemGroup>
+    <Compile Include="enumerateWebPartsRoot.ps1" />
+    <Compile Include="enumerateWebPartsSitePages.ps1" />
+    <Compile Include="enumerateWebPartsSites.ps1" />
+    <Compile Include="enumerateWebParts_2v2.ps1" />
     <Compile Include="Script.ps1" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
