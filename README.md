@@ -1,7 +1,6 @@
 # Update EasyTabs WebParts
 
-This script will update most/if not all SharePoint EasyTab webparts. 
-
+This script will update most/if not all SharePoint 2013 EasyTab webparts. 
 
 ## Notable Variables
 
