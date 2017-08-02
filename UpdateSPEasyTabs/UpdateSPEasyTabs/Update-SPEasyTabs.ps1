@@ -11,7 +11,11 @@
 ## 
 ################################################################################
 
-## Load SharePoint Functions
+## Load SharePoint Modules
+
+Add-PSSnapin Microsoft.SharePoint.PowerShell
+
+## Load SharePoint EasyTabs Functions
 
 function Enumerate-WebPartsSites{
 <#
@@ -20,7 +24,7 @@ Enumerate through Sharepoint WebParts per each site
 .DESCRIPTION
 Enumerate through Sharepoint WebParts per each site
 .PARAMETER SPFarmURL
-The name of the computer to query.  Accepts multiple values and accepts pipeline input.
+SharePoint Farm URL
 .EXAMPLE
 Enumerate-WebPartsSites -SPFarmURL http://spsite.domain.com
 #>
@@ -49,7 +53,6 @@ foreach($web in $site.AllWebs) {
     }
 }
 
-
 function Enumerate-WebPartsSitePages {
 <#
 .SYNOPSIS
@@ -57,7 +60,7 @@ Enumerate through Sharepoint WebParts per each site
 .DESCRIPTION
 Enumerate through Sharepoint WebParts per each site
 .PARAMETER SPFarmURL
-The name of the computer to query.  Accepts multiple values and accepts pipeline input.
+SharePoint Farm URL
 .EXAMPLE
 Enumerate-WebPartsSitePages -SPFarmURL http://spsite.domain.com
 #>
@@ -86,7 +89,6 @@ foreach($web in $site.AllWebs) {
 }
 }
 
-
 function Enumerate-WebPartsRoot {
 <#
 .SYNOPSIS
@@ -94,7 +96,7 @@ Enumerate through Sharepoint WebParts per each site
 .DESCRIPTION
 Enumerate through Sharepoint WebParts per each site
 .PARAMETER SPFarmURL
-The name of the computer to query.  Accepts multiple values and accepts pipeline input.
+SharePoint Farm URL
 .EXAMPLE
 Enumerate-WebPartsRoot -SPFarmURL http://spsite.domain.com
 #>
@@ -119,7 +121,6 @@ $SPFarmURL
     }
 }
 
-
 function Enumerate-WebParts {
 <#
 .SYNOPSIS
@@ -127,7 +128,7 @@ Enumerate through Sharepoint WebParts per each site
 .DESCRIPTION
 Enumerate through Sharepoint WebParts per each site
 .PARAMETER SPFarmURL
-The name of the computer to query.  Accepts multiple values and accepts pipeline input.
+SharePoint Farm URL
 .EXAMPLE
 Enumerate-WebParts -SPFarmURL http://spsite.domain.com
 #>
@@ -150,7 +151,7 @@ $SPFarmURL
                 $fileUrl = $webUrl + “/” + $item.File.Url
                 $manager = $item.file.GetLimitedWebPartManager([System.Web.UI.WebControls.Webparts.PersonalizationScope]::Shared);
                 $wps = $manager.webparts
-                $wps | select-object @{Expression={$pWeb.Url};Label=”Web URL”},@{Expression={$fileUrl};Label=”Page URL”}, DisplayTitle, IsVisible, @{Expression={$_.GetType().ToString()};Label=”Type”}
+                $wps | select-object @{Expression={$pWeb.Url};Label=”WebURL”},@{Expression={$fileUrl};Label=”PageURL”},DisplayTitle,IsVisible, @{Expression={$_.GetType().ToString()};Label=”Type”}
             }
         }
         else {
@@ -160,7 +161,7 @@ $SPFarmURL
                     $fileUrl = $webUrl + “/” + $item.File.Url
                     $manager = $item.file.GetLimitedWebPartManager([System.Web.UI.WebControls.Webparts.PersonalizationScope]::Shared);
                     $wps = $manager.webparts
-                    $wps | select-object @{Expression={$pWeb.Url};Label=”Web URL”},@{Expression={$fileUrl};Label=”Page URL”}, DisplayTitle, IsVisible, @{Expression={$_.GetType().ToString()};Label=”Type”}
+                    $wps | select-object @{Expression={$pWeb.Url};Label=”WebURL”},@{Expression={$fileUrl};Label=”PageURL”},DisplayTitle,IsVisible, @{Expression={$_.GetType().ToString()};Label=”Type”}
                 }
             }
             else {
@@ -168,22 +169,139 @@ $SPFarmURL
             $pages = $web.GetFile("default.aspx")
             $manager = $web.GetLimitedWebPartManager("default.aspx",[System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
             $wps = $manager.webparts
-            $wps | select-object @{Expression={$pWeb.Url};Label=”Web URL”},@{Expression={$fileUrl};Label=”Page URL”}, DisplayTitle, IsVisible, @{Expression={$_.GetType().ToString()};Label=”Type”}
+            $wps | select-object @{Expression={$pWeb.Url};Label=”WebURL”},@{Expression={$fileUrl};Label=”PageURL”},DisplayTitle,IsVisible, @{Expression={$_.GetType().ToString()};Label=”Type”}
             }
         }        Write-Host “… completed processing” $web
     }
 }
 
+function Get-SPEasyTabs{
+<#
+.SYNOPSIS
+Retreive Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Retreive Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+Get-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]
+    [String[]]
+    $SPSiteArray
+)
+foreach($fg in $SPSiteArray)
+{
+	if(($fg.displaytitle -eq "Easy Tabs 2010 - Orange") -or ($fg.displaytitle -eq "Easy Tabs 2007") -or ($fg.displaytitle -eq "Easy Tabs 2010 - Gray") -or ($fg.displaytitle -eq "EasyTabs2013"))
+	{
+		$fgimport += $fg
+	}
+}
 
 
 
+}
+
+function Add-SPEasyTabs{
+<#
+.SYNOPSIS
+Adds Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Adds Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+Add-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]
+    [String[]]
+    $SPSiteArray
+)
+foreach($fgwp in $fgimport){$WebPartFileName = "EasyTabs2013.dwp";$WebPartZoneIndex = 1;$WebPartFilePath = "D:\EasyTabs\$WebPartFileName"; $WebPartZoneID = $fgwp.ZoneID;$SiteURL =  $fgwp.WebURL + "/";$PageURL = $fgwp.PageURL.Substring(1);$web = Get-SPWeb $SiteUrl;$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web);$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared);write-host $($fgwp.WebURL + $fgwp.PageURL) -foregroundcolor Yellow;[xml]$WebPartXml = get-content $WebPartFilePath;$SR = New-Object System.IO.StringReader($WebPartXml.OuterXml);$XTR = New-Object System.Xml.XmlTextReader($SR);$Err = $null;$WP = $wpm.ImportWebPart($XTR, [ref] $Err); $wpm.AddWebPart($WP, $WebPartZoneID, $WebPartZoneIndex)}
+
+}
+
+function Remove-SPEasyTabs{
+<#
+.SYNOPSIS
+Removes Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Removes Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+Remove-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]
+    [String[]]
+    $SPSiteArray
+)
 
 
+}
+
+function CheckIn-SPEasyTabs{
+<#
+.SYNOPSIS
+Checks in Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Checks in Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+CheckIn-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]
+    [String[]]
+    $SPSiteArray
+)
 
 
+}
+
+function CheckOut-SPEasyTabs{
+<#
+.SYNOPSIS
+Checks out Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Checks out Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+CheckIn-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]
+    [String[]]
+    $SPSiteArray
+)
 
 
-
+}
 
 
 
