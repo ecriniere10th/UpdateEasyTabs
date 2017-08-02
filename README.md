@@ -1,4 +1,4 @@
-# Update Easy Tabs WebParts
+# Update EasyTabs WebParts
 
 This script will update most/if not all SharePoint EasyTab webparts. 
 
