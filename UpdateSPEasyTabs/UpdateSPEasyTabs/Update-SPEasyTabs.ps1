@@ -192,19 +192,20 @@ Param (
         Mandatory=$True,
         ValueFromPipeline=$True
         )]
-    [String[]]
     $SPSiteArray
 )
+$fgimport = $null
+$fgimport = @()
+
 foreach($fg in $SPSiteArray)
 {
 	if(($fg.displaytitle -eq "Easy Tabs 2010 - Orange") -or ($fg.displaytitle -eq "Easy Tabs 2007") -or ($fg.displaytitle -eq "Easy Tabs 2010 - Gray") -or ($fg.displaytitle -eq "EasyTabs2013"))
 	{
 		$fgimport += $fg
-	}
+	}	
 }
 
-
-
+$fgimport
 }
 
 function Add-SPEasyTabs{
@@ -251,6 +252,8 @@ Param (
     [String[]]
     $SPSiteArray
 )
+
+foreach($fgwp in $fgimport){$WebPartZoneID = $fgwp.ZoneID;$SiteURL =  $fgwp.WebURL + "/";$PageURL = $fgwp.PageURL;$pageUrlv2 = $SiteURL + $PageURL;$webpartID = $fgwp.id;$web = Get-SPWeb $SiteUrl;$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web);$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared);write-host $pageUrlv2 -foregroundcolor Yellow;$wpm.DeleteWebPart($wpm.Webparts[$webpartId])}
 
 
 }
