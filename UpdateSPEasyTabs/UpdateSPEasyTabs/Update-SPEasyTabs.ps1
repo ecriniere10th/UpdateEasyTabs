@@ -1,8 +1,7 @@
-﻿######################################################################################################################################
-
+﻿##############################################################################
 ##############################################################################
 ##
-## SAP SharePoint Update Reporting
+## Update EasyTabs for Sharepoint
 ## Author : Eric Criniere
 ## Date : 01 August 2017
 ## Version : 1.00
@@ -225,10 +224,27 @@ Param (
         Mandatory=$True,
         ValueFromPipeline=$True
         )]
-    [String[]]
     $SPSiteArray
 )
-foreach($fgwp in $fgimport){$WebPartFileName = "EasyTabs2013.dwp";$WebPartZoneIndex = 1;$WebPartFilePath = "D:\EasyTabs\$WebPartFileName"; $WebPartZoneID = $fgwp.ZoneID;$SiteURL =  $fgwp.WebURL + "/";$PageURL = $fgwp.PageURL.Substring(1);$web = Get-SPWeb $SiteUrl;$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web);$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared);write-host $($fgwp.WebURL + $fgwp.PageURL) -foregroundcolor Yellow;[xml]$WebPartXml = get-content $WebPartFilePath;$SR = New-Object System.IO.StringReader($WebPartXml.OuterXml);$XTR = New-Object System.Xml.XmlTextReader($SR);$Err = $null;$WP = $wpm.ImportWebPart($XTR, [ref] $Err); $wpm.AddWebPart($WP, $WebPartZoneID, $WebPartZoneIndex)}
+foreach($fgwp in $SPSiteArray)
+	{
+		$WebPartFileName = "EasyTabs2013.dwp"
+		$WebPartZoneIndex = 1
+		$WebPartFilePath = "D:\EasyTabs\$WebPartFileName"
+		$WebPartZoneID = $fgwp.ZoneID
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL.Substring(1)
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		write-host $($fgwp.WebURL + $fgwp.PageURL) -foregroundcolor Yellow
+		[xml]$WebPartXml = get-content $WebPartFilePath
+		$SR = New-Object System.IO.StringReader($WebPartXml.OuterXml)
+		$XTR = New-Object System.Xml.XmlTextReader($SR)
+		$Err = $null
+		$WP = $wpm.ImportWebPart($XTR, [ref] $Err)
+		$wpm.AddWebPart($WP, $WebPartZoneID, $WebPartZoneIndex)
+	}
 
 }
 
@@ -249,13 +265,22 @@ Param (
         Mandatory=$True,
         ValueFromPipeline=$True
         )]
-    [String[]]
     $SPSiteArray
 )
 
-foreach($fgwp in $fgimport){$WebPartZoneID = $fgwp.ZoneID;$SiteURL =  $fgwp.WebURL + "/";$PageURL = $fgwp.PageURL;$pageUrlv2 = $SiteURL + $PageURL;$webpartID = $fgwp.id;$web = Get-SPWeb $SiteUrl;$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web);$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared);write-host $pageUrlv2 -foregroundcolor Yellow;$wpm.DeleteWebPart($wpm.Webparts[$webpartId])}
-
-
+foreach($fgwp in $SPSiteArray)
+	{
+		$WebPartZoneID = $fgwp.ZoneID
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL
+		$pageUrlv2 = $SiteURL + $PageURL
+		$webpartID = $fgwp.id
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		write-host $pageUrlv2 -foregroundcolor Yellow
+		$wpm.DeleteWebPart($wpm.Webparts[$webpartId])
+	}
 }
 
 function CheckIn-SPEasyTabs{
@@ -274,12 +299,25 @@ Param (
     [Parameter(
         Mandatory=$True,
         ValueFromPipeline=$True
-        )]
-    [String[]]
+        )]    
     $SPSiteArray
 )
-
-
+	foreach($fgwp in $SPSiteArray)
+	{
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$pageUrlv2 = $fgwp.WebURL + $fgwp.PageURL
+		$page = $web.GetFile($pageUrlv2)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		Write-Host $pageUrlv2 -foregroundcolor Yellow
+		Write-host "Checked Out Status is : "$page.CheckOutStatus -foregroundcolor Yellow
+		if(!($page.checkoutstatus -eq "None"))
+		{
+			$page.checkin("Updated Webpart")
+		}
+	}
 }
 
 function CheckOut-SPEasyTabs{
@@ -298,32 +336,245 @@ Param (
     [Parameter(
         Mandatory=$True,
         ValueFromPipeline=$True
-        )]
-    [String[]]
+        )]    
     $SPSiteArray
 )
+	foreach($fgwp in $SPSiteArray)
+	{
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$pageUrlv2 = $fgwp.WebURL + $fgwp.PageURL
+		$page = $web.GetFile($pageUrlv2)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		Write-Host $pageUrlv2 -foregroundcolor Yellow
+		Write-host "Checked Out Status is : "$page.CheckOutStatus -foregroundcolor Yellow
+		if($page.checkoutstatus -eq "None")
+		{
+			$page.checkout()
+		}
+	}
+}
 
+function Check-SPEasyTabs{
+<#
+.SYNOPSIS
+Checks to see if Sharepoint EasyTabs WebParts are checked in or out per each site
+.DESCRIPTION
+Checks to see if Sharepoint EasyTabs WebParts are checked in or out per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+Check-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]    
+    $SPSiteArray
+)
+foreach($fgwp in $SPSiteArray)
+	{
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$pageUrlv2 = $fgwp.WebURL + $fgwp.PageURL
+		$page = $web.GetFile($pageUrlv2)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		Write-Host $pageUrlv2 -foregroundcolor Yellow
+		Write-host "Checked Out Status is : "$page.CheckOutStatus -foregroundcolor Yellow
+	}
+}
 
+function Publish-SPEasyTabs{
+<#
+.SYNOPSIS
+Publishes Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Publishes Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+Publish-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]    
+    $SPSiteArray
+)
+	foreach($fgwp in $SPSiteArray)
+	{
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$pageUrlv2 = $fgwp.WebURL + $fgwp.PageURL
+		$page = $web.GetFile($pageUrlv2)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		Write-Host $pageUrlv2 -foregroundcolor Yellow
+		Write-host "Checked Out Status is : "$page.CheckOutStatus -foregroundcolor Yellow
+		$page.checkin("Updated Webpart")
+		$page.publish("")
+		$web.Update()
+	}
+}
+
+function Verify-SPEasyTabs{
+<#
+.SYNOPSIS
+Verify status of Sharepoint EasyTabs WebParts per each site
+.DESCRIPTION
+Verify status of Sharepoint EasyTabs WebParts per each site
+.PARAMETER SiteArray
+Array of SharePoint sites with EasyTabs Webparts
+.EXAMPLE
+Verify-SPEasyTabs -SPSiteArray $SPEasyTabsWP
+#>
+[CmdletBinding()]
+Param (
+    [Parameter(
+        Mandatory=$True,
+        ValueFromPipeline=$True
+        )]    
+    $SPSiteArray
+)
+	foreach($fgwp in $SPSiteArray)
+	{
+		$SiteURL =  $fgwp.WebURL + "/"
+		$PageURL = $fgwp.PageURL
+		$web = Get-SPWeb $SiteUrl
+		$pweb = [Microsoft.SharePoint.Publishing.PublishingWeb]::GetPublishingWeb($web)
+		$wpm = $web.GetLimitedWebPartManager($PageURL, [System.Web.UI.WebControls.WebParts.PersonalizationScope]::Shared)
+		write-host $($fgwp.WebURL + $fgwp.PageURL) -foregroundcolor Yellow
+		foreach($wp in $wpm.webparts)
+		{
+			if($wp.zoneid -eq $fgwp.zoneid)
+			{
+				$wp | Select Title,ZoneID,PartOrder,Hidden
+			}
+		}
+	}
 }
 
 
+## Parameters
 
+## SharePoint Farm URL
+$Url = "http://spfarm.domain.com/"
 
+## Begin with null values for variables that will enumerate all webparts for the SharePoint Farm provided
 
+$fgwpet = $null
+$fgwproot = $null
+$fgwpsites = $null
+$fgwpsitepages = $null
+$fgimportet = $null
+$fgimportroot = $null
+$fgimportsites = $null
+$fgimportsitepages = $null
 
+## Sequence of events
 
+## Enumerate SharePoint webparts
 
+$fgwpet = Enumerate-WebParts -SPFarmURL $Url
+$fgwproot = Enumerate-WebPartsRoot -SPFarmURL $Url
+$fgwpsites = Enumerate-WebPartsSites -SPFarmURL $Url
+$fgwpsitepages = Enumerate-WebPartsSitePages -SPFarmURL $Url
 
+## Retreive all EasyTab webparts for each SharePoint site
 
+$fgimportet = Get-SPEasyTabs -SPSiteArray $fgwpet
+$fgimportroot = Get-SPEasyTabs -SPSiteArray $fgwproot
+$fgimportsites = Get-SPEasyTabs -SPSiteArray $fgwpsites
+$fgimportsitepages = Get-SPEasyTabs -SPSiteArray $fgwpsitepages
 
+## Verify status of EasyTab webparts for each SharePoint site : Are sites checked in or out?
+## Status : None = Checked In
+## Status : LongTerm = Checked Out
 
+Check-SPEasyTabs -SPSiteArray $fgimportet
+Check-SPEasyTabs -SPSiteArray $fgimportroot
+Check-SPEasyTabs -SPSiteArray $fgimportsites
+Check-SPEasyTabs -SPSiteArray $fgimportsitepage
 
+## Check out SharePoint sites
 
+CheckOut-SPEasyTabs -SPSiteArray $fgimportet
+CheckOut-SPEasyTabs -SPSiteArray $fgimportroot
+CheckOut-SPEasyTabs -SPSiteArray $fgimportsites
+CheckOut-SPEasyTabs -SPSiteArray $fgimportsitepage
 
+## Verify status of EasyTab webparts for each SharePoint site : Are sites checked in or out?
+## Status : None = Checked In
+## Status : LongTerm = Checked Out
 
+Check-SPEasyTabs -SPSiteArray $fgimportet
+Check-SPEasyTabs -SPSiteArray $fgimportroot
+Check-SPEasyTabs -SPSiteArray $fgimportsites
+Check-SPEasyTabs -SPSiteArray $fgimportsitepage
 
+## Remove EasyTab webparts for each SharePoint sites
 
+Remove-SPEasyTabs -SPSiteArray $fgimportet
+Remove-SPEasyTabs -SPSiteArray $fgimportroot
+Remove-SPEasyTabs -SPSiteArray $fgimportsites
+Remove-SPEasyTabs -SPSiteArray $fgimportsitepage
 
+## Check in SharePoint sites
 
+CheckIn-SPEasyTabs -SPSiteArray $fgimportet
+CheckIn-SPEasyTabs -SPSiteArray $fgimportroot
+CheckIn-SPEasyTabs -SPSiteArray $fgimportsites
+CheckIn-SPEasyTabs -SPSiteArray $fgimportsitepage
 
+## Verify status of EasyTab webparts for each SharePoint site : Are sites checked in or out?
+## Status : None = Checked In
+## Status : LongTerm = Checked Out
 
+Check-SPEasyTabs -SPSiteArray $fgimportet
+Check-SPEasyTabs -SPSiteArray $fgimportroot
+Check-SPEasyTabs -SPSiteArray $fgimportsites
+Check-SPEasyTabs -SPSiteArray $fgimportsitepage
+
+## Check out SharePoint sites
+
+CheckOut-SPEasyTabs -SPSiteArray $fgimportet
+CheckOut-SPEasyTabs -SPSiteArray $fgimportroot
+CheckOut-SPEasyTabs -SPSiteArray $fgimportsites
+CheckOut-SPEasyTabs -SPSiteArray $fgimportsitepage
+
+## Add new EasyTab webparts for each SharePoint site listed
+
+Add-SPEasyTabs -SPSiteArray $fgimportet
+Add-SPEasyTabs -SPSiteArray $fgimportroot
+Add-SPEasyTabs -SPSiteArray $fgimportsites
+Add-SPEasyTabs -SPSiteArray $fgimportsitepage
+
+## Check in SharePoint sites
+
+CheckIn-SPEasyTabs -SPSiteArray $fgimportet
+CheckIn-SPEasyTabs -SPSiteArray $fgimportroot
+CheckIn-SPEasyTabs -SPSiteArray $fgimportsites
+CheckIn-SPEasyTabs -SPSiteArray $fgimportsitepage
+
+## Publish SharePoint sites
+
+Publish-SPEasyTabs -SPSiteArray $fgimportet
+Publish-SPEasyTabs -SPSiteArray $fgimportroot
+Publish-SPEasyTabs -SPSiteArray $fgimportsites
+Publish-SPEasyTabs -SPSiteArray $fgimportsitepage
+
+## Verify EasyTab webparts are present for the SharePoint sites listed
+
+Verify-SPEasyTabs -SPSiteArray $fgimportet
+Verify-SPEasyTabs -SPSiteArray $fgimportroot
+Verify-SPEasyTabs -SPSiteArray $fgimportsites
+Verify-SPEasyTabs -SPSiteArray $fgimportsitepage
